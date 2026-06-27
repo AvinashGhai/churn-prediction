@@ -1,0 +1,3 @@
+segment,customers,total_monthly_revenue,avg_monthly_charge,avg_tenure_months
+Retained,5163,316530.15,61.31,37.7
+Churned,1869,139130.85,74.44,18.0

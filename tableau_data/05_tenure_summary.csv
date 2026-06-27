@@ -1,0 +1,5 @@
+segment,total_customers,churned,churn_rate_pct,avg_monthly
+0-12 months,2175,1037,47.7,56.17
+13-24 months,1024,294,28.7,61.36
+25-48 months,1594,325,20.4,65.93
+49+ months,2239,213,9.5,73.95
