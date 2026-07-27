@@ -7,7 +7,8 @@ An end-to-end data analytics project that identifies at-risk telecom customers u
 ---
 
 ## Dashboard Preview
-<img width="854" height="508" alt="image" src="https://github.com/user-attachments/assets/d76baf1a-d9f2-475e-a77c-ae4f5b7004e4" />
+<img width="730" height="470" alt="image" src="https://github.com/user-attachments/assets/4d286066-4cd5-40f5-a3ec-8d6debeb1c7a" />
+
 
 
 <img width="726" height="424" alt="image" src="https://github.com/user-attachments/assets/d3ad5098-f5ad-4fba-9d7e-1820d43f0263" />
