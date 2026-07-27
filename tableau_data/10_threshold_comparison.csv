@@ -1,0 +1,4 @@
+threshold,precision,recall,f1,customers_contacted,expected_saved_revenue,total_contact_cost,net_value
+0.3,0.519,0.789,0.626,568,6756.95,8520.0,-1763.05
+0.4,0.59,0.655,0.621,415,5640.49,6225.0,-584.51
+0.5,0.65,0.492,0.56,283,4366.97,4245.0,121.97

@@ -126,6 +126,15 @@ X = X[features]
 
 churn_prob = model.predict_proba(X)[:, 1]
 
+RETENTION_SUCCESS_RATE = 0.30
+CONTACT_COST = 15.0
+
+try:
+    with open("model/best_threshold.txt") as f:
+        CONTACT_THRESHOLD = float(f.read().strip())
+except FileNotFoundError:
+    CONTACT_THRESHOLD = 0.5
+
 predictions = pd.read_sql_query("SELECT * FROM customers", sqlite3.connect("churn.db"))
 predictions["tenure_group"] = pd.cut(predictions["tenure"], bins=[0, 12, 24, 48, 72],
                                       labels=["0-12 months", "13-24 months", "25-48 months", "49+ months"])
@@ -138,6 +147,14 @@ predictions["risk_level"] = pd.cut(churn_prob,
 predictions["retention_priority_score"] = (
     predictions["churn_probability"] * predictions["monthlycharges"]
 ).round(2)
+
+predictions["contact_threshold_used"] = CONTACT_THRESHOLD
+predictions["flagged_for_contact"] = (churn_prob >= CONTACT_THRESHOLD).astype(int)
+predictions["expected_saved_revenue"] = np.where(
+    predictions["flagged_for_contact"] == 1,
+    (churn_prob * predictions["monthlycharges"] * RETENTION_SUCCESS_RATE).round(2),
+    0.0
+)
 
 def get_offer(row):
     if row["contract"] == "Month-to-month" and row["internetservice"] == "Fiber optic":
@@ -174,11 +191,12 @@ predictions["risk_reasons"] = predictions.apply(get_risk_reasons, axis=1)
 
 predictions.to_csv("tableau_data/07_predictions.csv", index=False)
 
-top_customers = predictions[predictions["risk_level"] == "High Risk"].sort_values(
-    "retention_priority_score", ascending=False
+top_customers = predictions[predictions["flagged_for_contact"] == 1].sort_values(
+    "expected_saved_revenue", ascending=False
 ).head(100)[[
     "customerid", "churn_probability", "monthlycharges",
-    "retention_priority_score", "risk_reasons", "recommended_offer",
+    "expected_saved_revenue", "retention_priority_score",
+    "risk_reasons", "recommended_offer",
     "contract", "internetservice", "tenure"
 ]]
 top_customers.to_csv("tableau_data/09_top_customers_to_save.csv", index=False)
