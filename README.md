@@ -249,4 +249,4 @@ python phase_6_genai_offers.py
 
 ## Author
 
-Avinash Ghai<img width="1230" height="648" alt="Screenshot 2026-07-29 at 5 15 05 PM" src="https://github.com/user-attachments/assets/439060f6-7de2-4683-a481-3b375b832145" />
+Avinash Ghai
