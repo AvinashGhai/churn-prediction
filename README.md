@@ -7,7 +7,8 @@ An end-to-end data analytics project that identifies at-risk telecom customers u
 ---
 
 ## Dashboard Preview
-<img width="854" height="508" alt="image" src="https://github.com/user-attachments/assets/d76baf1a-d9f2-475e-a77c-ae4f5b7004e4" />
+<img width="730" height="470" alt="image" src="https://github.com/user-attachments/assets/4d286066-4cd5-40f5-a3ec-8d6debeb1c7a" />
+
 
 
 <img width="726" height="424" alt="image" src="https://github.com/user-attachments/assets/d3ad5098-f5ad-4fba-9d7e-1820d43f0263" />
@@ -30,6 +31,9 @@ Customer churn is one of the most critical challenges in the telecom industry. E
 | Electronic check payment churn rate | 45.3% |
 | New customer churn rate (0-12 months) | 47.7% |
 | Monthly revenue at risk | $139,131 |
+| Recommended outreach threshold | 0.67 |
+| High-confidence customers to contact | 129 |
+| Estimated net monthly campaign value | $420.81 |
 
 **Top risk factors identified:**
 1. Month-to-month contract — customers are 15x more likely to churn than two-year customers
@@ -50,7 +54,8 @@ churn-prediction/
 ├── phase_1.py                               # Data loading, cleaning, SQL EDA
 ├── phase_2.py                               # Python EDA and visualizations
 ├── phase_3.py                               # Feature engineering and ML model
-├── phase_4_tableau.py                       # Export CSVs for Tableau
+├── phase_5.py                               # Threshold optimization and business impact
+├── phase_4_tableau.py                       # Export Tableau-ready data using the chosen threshold
 │
 ├── sql_queries.sql                          # Reference SQL queries
 │
@@ -58,7 +63,8 @@ churn-prediction/
 ├── model/
 │   ├── churn_model.pkl                      # Trained Random Forest model
 │   ├── scaler.pkl                           # Feature scaler
-│   └── feature_names.pkl                    # Column names for inference
+│   ├── feature_names.pkl                    # Column names for inference
+│   └── best_threshold.txt                   # Recommended outreach threshold
 │
 └── tableau_data/                            # CSVs used in Tableau dashboard
     ├── 01_customers_main.csv
@@ -69,7 +75,9 @@ churn-prediction/
     ├── 06_segment_heatmap.csv
     ├── 07_predictions.csv
     ├── 08_revenue_summary.csv
-    └── 09_top_customers_to_save.csv
+    ├── 09_top_customers_to_save.csv
+    ├── 10_threshold_comparison.csv
+    └── 11_threshold_full_curve.csv
 ```
 
 ---
@@ -134,16 +142,35 @@ The model correctly identifies 184 out of 374 churners in the test set. The AUC 
 
 ## Phase 4 — Tableau Dashboard
 
-Exported 9 analysis-ready CSV files and built an interactive dashboard in Tableau Public containing:
+Exported Tableau-ready CSV files and built an interactive dashboard in Tableau Public containing:
 
 - KPI summary: total customers, churn rate, monthly revenue at risk, model AUC
 - Churn by contract type (bar chart)
 - Churn by tenure group (bar chart)
 - Segment risk heatmap — contract type vs internet service
 - Revenue at risk — churned vs retained monthly revenue
-- Top 100 highest-risk customers with recommended retention offers
+- Top 100 customers to save, ranked by expected saved monthly revenue
+- Threshold business-impact curve showing the trade-off between campaign reach and net value
 
 **Dashboard:** https://public.tableau.com/app/profile/avinash.ghai/viz/TelecomCustomerChurnAnalysis_17824221845390/Dashboard1
+
+---
+
+## Phase 5 — Threshold Optimization & Business Impact
+
+Rather than using the default 0.50 classification threshold, the project evaluates thresholds from 0.05 to 0.94 using the held-out test set. Each option is assessed using precision, recall, F1-score, customers contacted, and estimated campaign value.
+
+**Business assumptions:**
+
+- Outreach cost: **$15 per customer**
+- Retention success rate: **30%**
+- Revenue estimate: expected **monthly** revenue retained
+
+The best operating threshold was **0.67**. It focuses outreach on **129** high-confidence customers and produces an estimated **net monthly value of $420.81**. In comparison, a lower 0.30 threshold contacted 568 customers but produced an estimated loss because outreach costs outweighed expected saved revenue.
+
+The chosen threshold is saved in `model/best_threshold.txt`; `phase_4_tableau.py` reads it to flag customers for contact and rank the retention list.
+
+> These business values are scenario estimates based on the stated assumptions. In production, the contact cost and retention-success rate should be validated with historical campaign outcomes or an A/B test.
 
 ---
 
@@ -159,6 +186,7 @@ pip install pandas numpy matplotlib seaborn scikit-learn
 python phase_1.py
 python phase_2.py
 python phase_3.py
+python phase_5.py
 python phase_4_tableau.py
 ```
 
