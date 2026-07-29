@@ -1,13 +1,14 @@
 # Telecom Customer Churn Prediction
 
-An end-to-end data analytics project that identifies at-risk telecom customers using SQL, Python, and Machine Learning, with results visualized in an interactive Tableau dashboard.
+An end-to-end data analytics project that identifies at-risk telecom customers using SQL, Python, and Machine Learning, with results visualized in an interactive Tableau dashboard — and personalized retention outreach generated with GenAI.
 
 **Live Dashboard:** https://public.tableau.com/app/profile/avinash.ghai/viz/TelecomCustomerChurnAnalysis_17824221845390/Dashboard1
 
 ---
 
 ## Dashboard Preview
-<img width="730" height="470" alt="image" src="https://github.com/user-attachments/assets/4d286066-4cd5-40f5-a3ec-8d6debeb1c7a" />
+<img width="730" height="430" alt="image" src="https://github.com/user-attachments/assets/610835e6-1e3d-4026-92b6-910973d25bcf" />
+
 
 
 
@@ -54,10 +55,12 @@ churn-prediction/
 ├── phase_1.py                               # Data loading, cleaning, SQL EDA
 ├── phase_2.py                               # Python EDA and visualizations
 ├── phase_3.py                               # Feature engineering and ML model
-├── phase_5.py                               # Threshold optimization and business impact
+├── phase_5_threshold_analysis.py            # Threshold optimization and business impact
 ├── phase_4_tableau.py                       # Export Tableau-ready data using the chosen threshold
+├── phase_6_genai_offers.py                  # GenAI-generated personalized retention emails
 │
 ├── sql_queries.sql                          # Reference SQL queries
+├── requirements.txt                         # Python dependencies
 │
 ├── charts/                                  # 10 generated chart PNGs
 ├── model/
@@ -77,7 +80,8 @@ churn-prediction/
     ├── 08_revenue_summary.csv
     ├── 09_top_customers_to_save.csv
     ├── 10_threshold_comparison.csv
-    └── 11_threshold_full_curve.csv
+    ├── 11_threshold_full_curve.csv
+    └── 12_genai_retention_emails.csv
 ```
 
 ---
@@ -174,11 +178,35 @@ The chosen threshold is saved in `model/best_threshold.txt`; `phase_4_tableau.py
 
 ---
 
+## Phase 6 — GenAI-Powered Retention Emails
+
+Identifying a customer as high-risk is only half the job — someone still has to write the outreach message. `phase_6_genai_offers.py` closes that gap by generating a personalized retention email for each of the top 100 flagged customers, using Groq's `openai/gpt-oss-120b` model.
+
+Each email is grounded in the customer's actual profile — contract type, tenure, monthly charge, specific churn risk reasons, and the existing rule-based recommended offer — so the model is turning a data-driven decision into natural language, not inventing one from scratch.
+
+**Example output:**
+
+> *"We've loved having you with us for the past three months on our fast-lane fiber optic plan, and we want to keep your connection running smoothly at the best value. To make staying even easier, we're adding a 10% discount to your current $105.90 monthly bill and offering you an upgrade to a 12-month contract that locks in this reduced rate..."*
+
+**Design decisions:**
+- Only the 100 highest-value flagged customers get an LLM call, not the full customer base — keeps runtime and API cost low while covering the segment that's actually going to be contacted
+- Falls back to the original rule-based offer text if no API key is set, the call fails, or the model returns an empty response — the pipeline never breaks even if the GenAI step does
+- Uses `reasoning_effort="low"` since `gpt-oss-120b` is a reasoning model that can otherwise spend its entire token budget on hidden reasoning before writing the actual email
+
+Output saved to `tableau_data/12_genai_retention_emails.csv`.
+
+---
+
 ## How to Run
 
 **Prerequisites:**
 ```bash
-pip install pandas numpy matplotlib seaborn scikit-learn
+pip install -r requirements.txt
+```
+
+Create a `.env` file in the project root with your Groq API key:
+```
+GROQ_API_KEY=your_key_here
 ```
 
 **Run in order:**
@@ -186,9 +214,12 @@ pip install pandas numpy matplotlib seaborn scikit-learn
 python phase_1.py
 python phase_2.py
 python phase_3.py
-python phase_5.py
+python phase_5_threshold_analysis.py
 python phase_4_tableau.py
+python phase_6_genai_offers.py
 ```
+
+`phase_5_threshold_analysis.py` must run before `phase_4_tableau.py` — it writes `model/best_threshold.txt`, which `phase_4_tableau.py` depends on to flag customers for contact. `phase_6_genai_offers.py` must run after `phase_4_tableau.py`, since it reads `tableau_data/09_top_customers_to_save.csv`.
 
 ---
 
@@ -200,6 +231,7 @@ python phase_4_tableau.py
 | Data manipulation | Python, Pandas |
 | Visualization | Matplotlib, Seaborn, Tableau Public |
 | Machine learning | Scikit-learn (Logistic Regression, Random Forest) |
+| GenAI | Groq API (`openai/gpt-oss-120b`) |
 | IDE | VS Code |
 | Version control | Git, GitHub |
 
@@ -217,4 +249,4 @@ python phase_4_tableau.py
 
 ## Author
 
-Avinash Ghai
+Avinash Ghai<img width="1230" height="648" alt="Screenshot 2026-07-29 at 5 15 05 PM" src="https://github.com/user-attachments/assets/439060f6-7de2-4683-a481-3b375b832145" />
